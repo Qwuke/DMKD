@@ -6,60 +6,92 @@ import java.util.regex.*;
 public class Main {
 
     public static void main(String[] args) {
-        int len = 5000;//length of your vector, look for 'len:#' in the input file
-        boolean forGpuCode = true;//Whether or not to have line numbers in front of the output text
-        String outputPath = "C:\\Users\\Tristan\\Documents\\GitHub\\DMKD\\InputConverter\\vectors1.txt";//Name and path of output file
-        String inputPath = "C:\\Users\\Tristan\\Documents\\GitHub\\DMKD\\InputConverter\\vectors.txt";//Name and path of input file
+        //Edit these variables before you run the code
+        int len = 40;//length of your vector, look for 'len:#' in the input file
+        String outputGpuPath = "C:\\Users\\Tristan\\Documents\\DMKD\\GPU_Kmeans\\GPU_Kmeans\\vectors.txt";//Name and path of output file for GPU Kmeans
+        String outputSparkPath = "C:\\Users\\Tristan\\Documents\\DMKD\\Spark_Kmeans\\Spark_Kmeans\\vectors.txt";//Name and path of output file for Spark Kmeans
+        String outputMultiPath = "C:\\Users\\Tristan\\Documents\\DMKD\\Spark_Kmeans\\Spark_Kmeans\\vectors1.txt";
+        String inputPath = "C:\\Users\\Tristan\\Documents\\DMKD\\Mapreduce_Kmeans\\vectors.txt";//Name and path of input file
+        //I can explain the rest of program later, but it does require the complexity that it has
         try {
             File file = new File(inputPath);
             FileReader fileReader = new FileReader(file);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
-            StringBuffer stringBuffer = new StringBuffer();
+            StringBuffer gpuBuffer = new StringBuffer();
+            StringBuffer sparkBuffer = new StringBuffer();
+            StringBuffer multiBuffer = new StringBuffer();
             String line;
             String[] arr;
             String updatedLine;
             String adjustedLine;
-            int n = 1;
+            String multiCoreMapRLine;
+            int n = 0;
             while ((line = bufferedReader.readLine()) != null) {
-                updatedLine = line.replaceAll("^.*?(?=0:)|;","");
+                //updatedLine = line.replaceAll("^.*?(?=len:\\s)|len:\\s\\d\\d?\\d?\\d?\\d?\\d?\\d?;\\s|;",""); this was for converting newsgroup data
+                updatedLine = line.replaceFirst("\\d\\d?\\d?\\d?\\d?\\d?\\d?\\d?\\d?\\s","");
+                updatedLine = updatedLine.replaceAll("\\d\\d?\\d?\\d?\\d?\\d?\\d?\\d?\\d?:","");
+                System.out.println(updatedLine);
                 arr = updatedLine.split("\\s");
                 int i = 0;
                 int r = 0;
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuffer stringBuffer = new StringBuffer();
                 while(i < len) {
+                    stringBuffer.append(n+":"+arr[i]+"; ");
+                    /**
                     if (i - r < arr.length) {
                         int index = arr[i-r].indexOf(":");
                         if (Integer.parseInt(arr[i - r].substring(0, index)) == i) {
-                            stringBuilder.append(arr[i-r] + " ");
+                            stringBuffer.append(arr[i-r] + "; ");
 
                         } else {
-                            stringBuilder.append(i + ":0 ");
+                            stringBuffer.append(i + ":0; ");
                             r++;
                         }
                     } else {
-                        stringBuilder.append(i + ":0 ");
-                    }
+                        stringBuffer.append(i + ":0; ");
+                    }*/
+                    System.out.println(i);
                     i++;
                 }
-                if(forGpuCode){
-                    stringBuffer.append(n + " ");
-                }
-                adjustedLine = stringBuilder.toString();
 
-                adjustedLine = adjustedLine.replaceAll("\\s\\d\\d?\\d?\\d?\\d?\\d?\\d?:"," ");//Comment these lines out if you want vectors to be formatted with dimension numbers
-                adjustedLine = adjustedLine.replaceFirst("0:","");
+                multiCoreMapRLine = stringBuffer.toString();
+                adjustedLine = multiCoreMapRLine.replaceAll("\\s\\d\\d?\\d?\\d?\\d?\\d?\\d?:|;","");//Comment these lines out if you want vectors to be formatted with dimension numbers
 
-                stringBuffer.append(adjustedLine);
-                stringBuffer.append("\n");
+                multiBuffer.append("key: a" + n + "; value: " + n + "; len: " + len + "; ");
+                multiBuffer.append(multiCoreMapRLine);
+                multiBuffer.append("\n");
+                gpuBuffer.append(n + " ");
+                gpuBuffer.append(adjustedLine);
+                gpuBuffer.append("\n");
+                sparkBuffer.append(adjustedLine);
+                sparkBuffer.append("\n");
                 n++;
             }
             fileReader.close();
             //System.out.println("Contents of file:");
             //System.out.println(stringBuffer.toString());
             try {
-                File output = new File(outputPath);
-                FileWriter fileWriter = new FileWriter(output);
-                fileWriter.write(stringBuffer.toString());
+                File outputMulti = new File(outputMultiPath);
+                FileWriter fileWriter = new FileWriter(outputMulti);
+                fileWriter.write(multiBuffer.toString());
+                fileWriter.flush();
+                fileWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                File outputGpu = new File(outputGpuPath);
+                FileWriter fileWriter = new FileWriter(outputGpu);
+                fileWriter.write(gpuBuffer.toString());
+                fileWriter.flush();
+                fileWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                File outputSpark = new File(outputSparkPath);
+                FileWriter fileWriter = new FileWriter(outputSpark);
+                fileWriter.write(sparkBuffer.toString());
                 fileWriter.flush();
                 fileWriter.close();
             } catch (IOException e) {
@@ -68,6 +100,7 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
 
     }
 }
